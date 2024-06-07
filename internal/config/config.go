@@ -1,4 +1,3 @@
-// Package config provides functionality to parse and manage application configuration.
 package config
 
 import (
@@ -10,12 +9,8 @@ import (
 
 // Config represents the application configuration.
 type Config struct {
-	// Port is the server port.
-	Port uint
-
-	// TTL is the default storage TTL (Time-To-Live) for key-value pairs.
-	TTL uint
-
+	Port      uint
+	TTL       uint
 	CleanFreq uint
 }
 
@@ -27,8 +22,8 @@ func New() *Config {
 // MustInit initializes the configuration from command-line flags. It panics if any required flag is not provided or has invalid value.
 func (c *Config) MustInit() {
 	flag.UintVar(&c.Port, "port", 8080, "server port")
-	flag.UintVar(&c.TTL, "ttl", 5, "default storage ttl")
-	flag.UintVar(&c.CleanFreq, "cf", 5, "storage clean frequency")
+	flag.UintVar(&c.TTL, "ttl", 3000000000000, "default storage ttl")
+	flag.UintVar(&c.CleanFreq, "cf", 300000000000, "storage clean frequency")
 	flag.Parse()
 
 	if c.Port < 1 || c.Port > 65535 {

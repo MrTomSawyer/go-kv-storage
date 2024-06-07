@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/MrTomSawyer/go-kv-storage/internal/app"
 	"github.com/MrTomSawyer/go-kv-storage/internal/config"
-	"github.com/MrTomSawyer/go-kv-storage/internal/server"
-	"github.com/MrTomSawyer/go-kv-storage/internal/storage"
-	"time"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -13,20 +15,16 @@ func main() {
 	cfg.MustInit()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	server := app.New(ctx, cfg)
 
-	cleanFreq := time.Duration(cfg.CleanFreq) * time.Second
-	TTL := time.Duration(cfg.TTL) * time.Second
+	go server.GRPCServer.MustRun()
 
-	st, err := storage.InitStorage(ctx, cleanFreq, TTL)
-	if err != nil {
-		panic(err)
-	}
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
-	s := server.New(cfg, st)
+	<-stop
 
-	err = s.Start(ctx)
-	if err != nil {
-		panic(err)
-	}
+	cancel()
+	server.GRPCServer.Stop()
+	log.Println("server stopped")
 }

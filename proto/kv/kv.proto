@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package kvstorage;
+
+option go_package = "sawyer.kv.v1;kv1";
+
+service KeyValueStorage {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  string value = 1;
+  bool found = 2;
+}
+
+message SetRequest {
+  string key = 1;
+  string value = 2;
+  int64 ttl = 3;
+}
+
+message SetResponse {
+  bool success = 1;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}

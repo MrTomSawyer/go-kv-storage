@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"github.com/MrTomSawyer/go-kv-storage/internal/models"
+	"log"
 	"sync"
 	"time"
 )
@@ -10,12 +11,12 @@ import (
 // Storage represents a thread-safe key-value storage
 type Storage struct {
 	S          sync.Map
-	defaultTTL time.Duration
+	DefaultTTL time.Duration
 }
 
 // New creates a new Storage instance
 func New(TTL time.Duration) *Storage {
-	return &Storage{defaultTTL: TTL}
+	return &Storage{DefaultTTL: TTL}
 }
 
 // InitStorage creates a new Storage instance and starts a cleanup process
@@ -27,7 +28,7 @@ func InitStorage(ctx context.Context, cleanFreq time.Duration, TTL time.Duration
 }
 
 // Get retrieves a value by key if it exists and has not expired
-func (s *Storage) Get(key string) (models.Entry, bool) {
+func (s *Storage) Get(_ context.Context, key string) (models.Entry, bool) {
 	item, exists := s.S.Load(key)
 	if !exists {
 		return models.Entry{}, false
@@ -38,12 +39,13 @@ func (s *Storage) Get(key string) (models.Entry, bool) {
 		return models.Entry{}, false
 	}
 
+	log.Printf("value for key %s found \n", key)
 	return entry, true
 }
 
-// Set adds or updates a key-value pair with a defaultTTL (time-to-live)
-func (s *Storage) Set(key string, value string, TTL ...time.Duration) {
-	finalTTL := s.defaultTTL
+// Set adds or updates a key-value pair with a DefaultTTL (time-to-live)
+func (s *Storage) Set(_ context.Context, key string, value string, TTL ...time.Duration) {
+	finalTTL := s.DefaultTTL
 
 	// set custom TTL if one is provided
 	if len(TTL) > 0 {
@@ -54,10 +56,13 @@ func (s *Storage) Set(key string, value string, TTL ...time.Duration) {
 		Value:     value,
 		ExpiresAt: time.Now().Add(finalTTL),
 	}
+
+	log.Printf("key %s value %s are saved \n", key, value)
 	s.S.Store(key, entry)
 }
 
 // Delete removes a value by the given key
-func (s *Storage) Delete(key string) {
+func (s *Storage) Delete(_ context.Context, key string) {
 	s.S.Delete(key)
+	log.Printf("key %s deleted \n", key)
 }
